@@ -41,4 +41,9 @@ public class KeyRange {
     {
         return (value >= KeyRange.MIN_KEY && value <= KeyRange.MAX_KEY);
     }
+
+    @Override
+    public String toString(){
+        return _startKey + ":" + _endKey;
+    }
 }

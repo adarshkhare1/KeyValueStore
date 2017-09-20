@@ -1,7 +1,10 @@
 package com.adarsh.KeyValueStore.Cluster;
 
 import com.adarsh.KeyValueStore.Storage.KeyRange;
+import com.adarsh.KeyValueStore.Storage.StoragePartition;
 import com.google.common.base.Preconditions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,7 +18,12 @@ public class StorageMaster extends PhysicalNode {
     private KeyRange _masterKeyRange;
     private List<StorageNode> _nodes;
     private Map<KeyRange, StorageNode> _masterNodeMap;
+    private static final Logger _LOGGER;
 
+    static
+    {
+        _LOGGER = LogManager.getLogger(StorageMaster.class.getName());
+    }
     public StorageMaster(NodeEndpoint endpoint) {
         this(DEFAULT_NODE_NAME, endpoint);
     }
@@ -49,7 +57,11 @@ public class StorageMaster extends PhysicalNode {
         String storeNodeName = DEFAULT_STORAGE_NODE_PREFIX+_nodes.size();
         //First node, no need to evaluate partitions
         StorageNode storageNode = new StorageNode(storeNodeName, storageEndpoint, _masterKeyRange);
+        _LOGGER.info("Registering a new physical storage node named {}", storeNodeName);
         _nodes.add(storageNode);
+        _LOGGER.info("{} : Keyrange {} alloczated to storageNode.",
+                storeNodeName,
+                storageNode.getKeyRange().toString());
         _masterNodeMap.put(storageNode.getKeyRange(), storageNode);
     }
 
