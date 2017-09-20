@@ -1,4 +1,4 @@
-package com.adarsh.KeyValueStore;
+package com.adarsh.KeyValueStore.Storage;
 
 import java.util.List;
 
