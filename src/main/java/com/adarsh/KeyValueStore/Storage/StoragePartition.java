@@ -1,5 +1,6 @@
 package com.adarsh.KeyValueStore.Storage;
 
+import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,25 +9,39 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StoragePartition {
-    private KeyRange _keyRange;
-    private Map<Long, StorageBlob> _primaryStore;
-    private final Logger _LOGGER;
 
-    /**
-     *
-     */
-    public StoragePartition(){
-       this(new KeyRange());
-    }
-
-    /**
-     * @param keyRange
-     */
-    public StoragePartition(KeyRange keyRange){
-        _keyRange = keyRange;
-        _primaryStore = Collections.synchronizedMap(new HashMap<Long, StorageBlob>());
+    private static final Logger _LOGGER;
+    static {
         _LOGGER = LogManager.getLogger(StoragePartition.class.getName());
     }
+
+    private KeyRange _keyRange;
+    private Map<Long, StorageBlob> _primaryStore;
+    private VirtualStorageNode _parentNode;
+
+    /**
+     * @param parentNode
+     * @param keyRange
+     */
+    public StoragePartition(VirtualStorageNode parentNode, KeyRange keyRange){
+        Preconditions.checkNotNull(parentNode,"parentNode is null.");
+        Preconditions.checkNotNull(keyRange, "Invalid key range.");
+        _keyRange = keyRange;
+        _parentNode = parentNode;
+        _primaryStore = Collections.synchronizedMap(new HashMap<Long, StorageBlob>());
+    }
+
+    /**
+     * @return
+     */
+    public VirtualStorageNode getParentNode() {
+        return _parentNode;
+    }
+
+    /**
+     * @return
+     */
+    public KeyRange getKeyRange() { return _keyRange; }
 
     /**
      * @param key
@@ -73,6 +88,11 @@ public class StoragePartition {
             _LOGGER.info("Cannot find the key to delete {}.", key);
             throw new KeyNotFoundException();
         }
+    }
+
+    @Override
+    public String toString(){
+        return "Partition->"+_keyRange.toString();
     }
 }
 

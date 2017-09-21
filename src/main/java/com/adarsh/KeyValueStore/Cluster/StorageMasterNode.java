@@ -1,7 +1,6 @@
 package com.adarsh.KeyValueStore.Cluster;
 
-import com.adarsh.KeyValueStore.Storage.KeyRange;
-import com.adarsh.KeyValueStore.Storage.StoragePartition;
+import com.adarsh.KeyValueStore.Storage.*;
 import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,37 +11,50 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StorageMaster extends PhysicalNode {
+public class StorageMasterNode extends PhysicalNode {
     private static final String DEFAULT_NODE_NAME = "_master_";
     private static final String DEFAULT_STORAGE_NODE_PREFIX = "_store_";
-    private KeyRange _masterKeyRange;
-    private List<StorageNode> _nodes;
-    private Map<KeyRange, StorageNode> _masterNodeMap;
     private static final Logger _LOGGER;
 
     static
     {
-        _LOGGER = LogManager.getLogger(StorageMaster.class.getName());
+        _LOGGER = LogManager.getLogger(StorageMasterNode.class.getName());
     }
-    public StorageMaster(NodeEndpoint endpoint) {
+
+    private KeyRange _masterKeyRange;
+    private List<StorageNode> _nodes;
+    private final StoragePartitionManager _partitionManager;
+    private final WriteRequestRouter _writeRouter;
+    private final ReadRequestRouter _readRouter;
+
+    /**
+     * @param endpoint
+     */
+    public StorageMasterNode(NodeEndpoint endpoint) {
         this(DEFAULT_NODE_NAME, endpoint);
     }
 
-    public StorageMaster(String nodeName, NodeEndpoint endpoint) {
+    /**
+     * @param nodeName
+     * @param endpoint
+     */
+    public StorageMasterNode(String nodeName, NodeEndpoint endpoint) {
         super(nodeName, endpoint);
         _masterKeyRange = new KeyRange(); // Current storage only support full key range.
         _nodes = Collections.synchronizedList(new ArrayList<StorageNode>());
-        _masterNodeMap = Collections.synchronizedMap(new HashMap<KeyRange, StorageNode>());
+        _partitionManager = new StoragePartitionManager();
+        _writeRouter = new WriteRequestRouter(_partitionManager);
+        _readRouter = new ReadRequestRouter(_partitionManager);
     }
 
     /**
      * Create a new node and allocate new load to the node by rebalancing. Node remain inactive.
      * @return
      */
-    public static StorageMaster createSingleNodeStorage(NodeEndpoint masterEndpoint)
+    public static StorageMasterNode createSingleNodeStorage(NodeEndpoint masterEndpoint)
     {
         Preconditions.checkNotNull(masterEndpoint);
-        StorageMaster master = new StorageMaster(masterEndpoint);
+        StorageMasterNode master = new StorageMasterNode(masterEndpoint);
         return master;
     }
 
@@ -62,7 +74,7 @@ public class StorageMaster extends PhysicalNode {
         _LOGGER.info("{} : Keyrange {} alloczated to storageNode.",
                 storeNodeName,
                 storageNode.getKeyRange().toString());
-        _masterNodeMap.put(storageNode.getKeyRange(), storageNode);
+        _partitionManager.registerStorageNodeForRouting(storageNode);
     }
 
     /**
@@ -71,5 +83,22 @@ public class StorageMaster extends PhysicalNode {
     public StorageNode[] getPhysicalStorageNodes(){
         StorageNode[] nodes = _nodes.toArray(new StorageNode[0]);
         return nodes;
+    }
+
+    /**
+     * @param key
+     * @param data
+     * @throws StorageException
+     */
+    public void insert(long key, StorageBlob data) throws StorageException {
+        _writeRouter.insert(key, data);
+    }
+
+    /**
+     * @param key
+     * @throws StorageException
+     */
+    public StorageBlob getValue(long key) throws StorageException {
+        return _readRouter.getValue(key);
     }
 }
