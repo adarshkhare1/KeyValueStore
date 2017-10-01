@@ -7,9 +7,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 public class StorageMasterNode extends PhysicalNode {
     private static final String DEFAULT_NODE_NAME = "_master_";
@@ -90,15 +89,27 @@ public class StorageMasterNode extends PhysicalNode {
      * @param data
      * @throws StorageException
      */
-    public void insert(long key, StorageBlob data) throws StorageException {
-        _writeRouter.insert(key, data);
+    public void insert(long key, StorageBlob data) throws StorageException, TimeoutException
+    {
+        try {
+            _writeRouter.insert(key, data);
+        }
+        catch (InterruptedException e) {
+            throw new TimeoutException("Write timed out");
+        }
     }
 
     /**
      * @param key
      * @throws StorageException
      */
-    public StorageBlob getValue(long key) throws StorageException {
-        return _readRouter.getValue(key);
+    public StorageBlob getValue(long key) throws StorageException, TimeoutException
+    {
+        try{
+            return _readRouter.getValue(key);
+        }
+        catch (InterruptedException e){
+            throw new TimeoutException("Write timed out");
+        }
     }
 }

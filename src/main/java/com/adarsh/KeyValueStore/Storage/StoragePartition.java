@@ -71,7 +71,7 @@ public class StoragePartition {
             throw new KeyAlreadyExistException();
         }
         _keyRange.verifyIfKeyIsInRange(key);
-        _LOGGER.info("Inserted new key %d.", key);
+        _LOGGER.info("Inserted new key {}", key);
         _primaryStore.put(key, data);
     }
 

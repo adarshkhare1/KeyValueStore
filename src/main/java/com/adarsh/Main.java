@@ -7,6 +7,7 @@ import com.adarsh.KeyValueStore.Storage.StorageBlob;
 import com.adarsh.KeyValueStore.Storage.StorageException;
 
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeoutException;
 
 public class Main {
 
@@ -29,6 +30,9 @@ public class Main {
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (StorageException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e)
+        {
             e.printStackTrace();
         }
     }
