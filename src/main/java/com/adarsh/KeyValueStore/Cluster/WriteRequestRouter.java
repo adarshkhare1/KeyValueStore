@@ -9,6 +9,8 @@ import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.TimeoutException;
+
 public class WriteRequestRouter {
     private static final Logger _LOGGER;
 
@@ -35,11 +37,11 @@ public class WriteRequestRouter {
      * @param key
      * @param data
      * @throws KeyOutOfRangeException
-     * @throws InterruptedException
+     * @throws TimeoutException
      */
     public void insert(long key,
                        StorageBlob data)
-            throws KeyOutOfRangeException, InterruptedException
+            throws KeyOutOfRangeException, TimeoutException
     {
         StoragePartition[] partitionsToInsert = _partitionManager.getWritePartitions(key);
         if(partitionsToInsert != null) {

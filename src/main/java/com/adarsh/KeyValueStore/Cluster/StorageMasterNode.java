@@ -91,12 +91,7 @@ public class StorageMasterNode extends PhysicalNode {
      */
     public void insert(long key, StorageBlob data) throws StorageException, TimeoutException
     {
-        try {
-            _writeRouter.insert(key, data);
-        }
-        catch (InterruptedException e) {
-            throw new TimeoutException("Write timed out");
-        }
+        _writeRouter.insert(key, data);
     }
 
     /**
@@ -105,11 +100,6 @@ public class StorageMasterNode extends PhysicalNode {
      */
     public StorageBlob getValue(long key) throws StorageException, TimeoutException
     {
-        try{
-            return _readRouter.getValue(key);
-        }
-        catch (InterruptedException e){
-            throw new TimeoutException("Write timed out");
-        }
+        return _readRouter.getValue(key);
     }
 }

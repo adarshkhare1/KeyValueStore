@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 
 public class ReadRequestRouter {
     private static final Logger _LOGGER;
@@ -40,7 +41,7 @@ public class ReadRequestRouter {
      * @throws InterruptedException
      */
     public StorageBlob getValue(long key)
-            throws StorageException, InterruptedException
+            throws StorageException, TimeoutException
     {
         StoragePartition[] partitionsToRead = _partitionManager.getReadPartitions(key);
         StorageBlob value = null;

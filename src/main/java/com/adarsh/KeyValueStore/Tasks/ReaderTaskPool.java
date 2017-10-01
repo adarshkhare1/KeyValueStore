@@ -1,12 +1,13 @@
 package com.adarsh.KeyValueStore.Tasks;
 
-import com.adarsh.KeyValueStore.Storage.StorageBlob;
-import com.adarsh.KeyValueStore.Storage.StoragePartition;
+import com.adarsh.KeyValueStore.Storage.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 import static java.lang.System.currentTimeMillis;
@@ -32,7 +33,7 @@ public class ReaderTaskPool {
         _readCompletionService = new ExecutorCompletionService<>(_WriterPool);
     }
 
-    public StorageBlob read() throws InterruptedException
+    public StorageBlob read() throws TimeoutException, StorageException
     {
         List<Future<StorageBlob>> futures = new ArrayList<>();
         for(StoragePartition p:_operation.getPartitions()) {
@@ -40,35 +41,66 @@ public class ReaderTaskPool {
             futures.add(_readCompletionService.submit(task));
             _LOGGER.info("Submitted WriterTask to insert key {} to partition {}.", _operation.getKey(), p);
         }
-        return GetMinimumReads(_operation.getMinimumSuccessfulReads());
+        return GetValue(_operation.getMinimumSuccessfulReads());
     }
 
+
     /**
-     * Wait for minimum number of reads.
-     * TODO: Currently simply get the minimum reads and return last one. Need to add matching logic to get latest version.
-     * @param minReads
+     * Wait for minimum number of matching reads to return
+     * @param minimumMatchReads
      * @return
-     * @throws InterruptedException
+     * @throws TimeoutException
+     * @throws ReadConsistencyException
      */
-    private StorageBlob GetMinimumReads(int minReads) throws InterruptedException
+    private StorageBlob GetValue(int minimumMatchReads) throws TimeoutException, ReadConsistencyException
     {
         long tickCount = currentTimeMillis();
         long timeout = _WriteTimeout;
-        int successCount = 0;
         StorageBlob result = null;
-        while(successCount < minReads && timeout > 0) {
-            Future<StorageBlob> resultFuture = _readCompletionService.poll(timeout, MILLISECONDS);
-            try {
-                result = resultFuture.get();
-                successCount++;
-                long newTickCount = currentTimeMillis();
-                timeout = timeout - (newTickCount - tickCount);
-                tickCount = newTickCount;
-            }
-            catch (ExecutionException e) {
-                e.printStackTrace();
+        int resultCount = 0;
+        Map<StorageBlob, Integer> readCountMap = new HashMap<>();
+        try {
+            while(resultCount < minimumMatchReads && timeout > 0) {
+                Future<StorageBlob> resultFuture = _readCompletionService.poll(timeout, MILLISECONDS);
+                try {
+                    StorageBlob s = resultFuture.get();
+                    if (s != null) {
+                        int count = updateReadCountMap(readCountMap, s);
+                        if (count > resultCount) {
+                            result = s;
+                            resultCount = count + 1;
+                        }
+                    }
+                    else {
+                        throw new ReadConsistencyException();
+                    }
+                    long newTickCount = currentTimeMillis();
+                    timeout = timeout - (newTickCount - tickCount);
+                    tickCount = newTickCount;
+                }
+                catch (ExecutionException e) {
+                    _LOGGER.warn(e.getMessage());
+                    throw new TimeoutException();
+                }
             }
         }
+        catch (InterruptedException e) {
+            _LOGGER.warn(e.getMessage());
+            throw new TimeoutException();
+        }
         return result;
+    }
+
+    /**
+     * Update the readcount map and return the count for the given storage blob.
+     * @param readCountMap
+     * @param s
+     * @return
+     */
+    private int updateReadCountMap(Map<StorageBlob, Integer> readCountMap, StorageBlob s)
+    {
+        int count = readCountMap.containsKey(s)? readCountMap.get(s)+1 : 1;
+        readCountMap.put(s, count);
+        return count;
     }
 }
