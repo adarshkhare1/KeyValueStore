@@ -50,7 +50,7 @@ public class StoragePartitionManager {
      * @return
      */
     public StoragePartition[] getWritePartitions(long key){
-        return new StoragePartition[]{findPartitionToInsert(key)};
+        return new StoragePartition[]{findPartitionForKey(key)};
     }
 
     /**
@@ -58,7 +58,7 @@ public class StoragePartitionManager {
      * @return
      */
     public StoragePartition[] getReadPartitions(long key){
-        return new StoragePartition[]{findPartitionToInsert(key)};
+        return new StoragePartition[]{findPartitionForKey(key)};
     }
 
     /**
@@ -66,7 +66,7 @@ public class StoragePartitionManager {
      * @param key
      * @return partition where key can be inserted, return null if no valid partition found to insert key.
      */
-    private StoragePartition findPartitionToInsert(long key) {
+    private StoragePartition findPartitionForKey(long key) {
         StoragePartition partitionToInsert = null;
         Iterator<StoragePartition> iterator = _partitionSet.iterator();
         while (iterator.hasNext()){

@@ -10,13 +10,13 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.Callable;
 
-public class WriteTask implements Callable<StorageResult>
+public class InsertTask implements Callable<StorageResult>
 {
     private static final Logger _LOGGER;
 
     static
     {
-        _LOGGER = LogManager.getLogger(WriteTask.class.getName());
+        _LOGGER = LogManager.getLogger(InsertTask.class.getName());
     }
 
     private final StoragePartition _partition;
@@ -26,7 +26,7 @@ public class WriteTask implements Callable<StorageResult>
     private final StorageBlob _value;
 
 
-    public  WriteTask(StoragePartition p, long key, StorageBlob value){
+    public InsertTask(StoragePartition p, long key, StorageBlob value){
         Preconditions.checkNotNull(p);
         _partition = p;
         _key = key;

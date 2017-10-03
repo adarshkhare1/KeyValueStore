@@ -5,7 +5,6 @@ import com.adarsh.KeyValueStore.Storage.StorageBlob;
 import com.adarsh.KeyValueStore.Storage.StorageException;
 import com.adarsh.KeyValueStore.Storage.StoragePartition;
 import com.adarsh.KeyValueStore.Tasks.ReadOperation;
-import com.adarsh.KeyValueStore.Tasks.ReaderTaskPool;
 import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,8 +49,7 @@ public class ReadRequestRouter {
             operation.setPartitions(partitionsToRead);
             operation.setKey(key);
             operation.setMinimumSuccessfulReads(_MinimumSuccessfulReads);
-            ReaderTaskPool reader = new ReaderTaskPool(operation);
-            value =  reader.read();
+            value = operation.execute();
         }
         else {
             _LOGGER.info("No valid partion found to fetch key {}.", key);

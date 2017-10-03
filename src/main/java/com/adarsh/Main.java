@@ -9,6 +9,8 @@ import com.adarsh.KeyValueStore.Storage.StorageException;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeoutException;
 
+import static java.lang.System.exit;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -35,5 +37,6 @@ public class Main {
         {
             e.printStackTrace();
         }
+        exit(0);
     }
 }
