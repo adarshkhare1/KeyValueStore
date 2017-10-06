@@ -3,6 +3,7 @@ package com.adarsh.KeyValueStore.Cluster.Test;
 import com.adarsh.KeyValueStore.Cluster.NodeEndpoint;
 import com.adarsh.KeyValueStore.Cluster.StorageMasterNode;
 import com.adarsh.KeyValueStore.Cluster.StorageNode;
+import com.adarsh.KeyValueStore.Storage.KeyNotFoundException;
 import com.adarsh.KeyValueStore.Storage.StorageBlob;
 import com.adarsh.KeyValueStore.Storage.StorageException;
 import org.junit.jupiter.api.Assertions;
@@ -12,22 +13,54 @@ import java.net.UnknownHostException;
 import java.util.concurrent.TimeoutException;
 
 class StorageMasterNodeTest {
+    private static final String _TestString = "test";
+    private final StorageMasterNode _master = buildStorageNode();
+
+    public StorageMasterNodeTest() throws UnknownHostException {
+        StorageMasterNode _master = buildStorageNode();
+    }
+
     @Test
     void insert() {
         try {
-            StorageMasterNode master = buildStorageNode();
-            StorageBlob data = new StorageBlob(("test").getBytes());
-            master.insert(1, data);
-            byte[] resultData = master.getValue(1).getBlobData();
-            System.out.println(new String(resultData));
+            StorageBlob data = new StorageBlob((_TestString).getBytes());
+            _master.insert(1, data);
+            byte[] resultData = _master.getValue(1).getBlobData();
+            Assertions.assertEquals(_TestString, new String(resultData), "data after insert");
 
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
         } catch (StorageException e) {
             e.printStackTrace();
+            Assertions.fail("Key not deleted");
         } catch (TimeoutException e)
         {
             e.printStackTrace();
+            Assertions.fail("Key not deleted");
+        }
+    }
+
+    @Test
+    void delete() {
+        try {
+            StorageBlob data = new StorageBlob(("test").getBytes());
+            _master.insert(1, data);
+            byte[] resultData = _master.getValue(1).getBlobData();
+            Assertions.assertEquals(_TestString, new String(resultData), "data after insert");
+            _master.delete(1);
+            try{
+                _master.getValue(1).getBlobData();
+                Assertions.fail("Key not deleted");
+            }
+            catch (KeyNotFoundException ex){
+              //Key deleted successfully if we get this exception.
+            }
+
+        } catch (StorageException e) {
+            e.printStackTrace();
+            Assertions.fail("Key not deleted");
+        } catch (TimeoutException e)
+        {
+            e.printStackTrace();
+            Assertions.fail("Key not deleted");
         }
     }
 

@@ -1,9 +1,6 @@
 package com.adarsh.KeyValueStore.Tasks;
 
-import com.adarsh.KeyValueStore.Storage.ReadConsistencyException;
-import com.adarsh.KeyValueStore.Storage.StorageBlob;
-import com.adarsh.KeyValueStore.Storage.StorageException;
-import com.adarsh.KeyValueStore.Storage.StoragePartition;
+import com.adarsh.KeyValueStore.Storage.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -65,8 +62,7 @@ public class ReadOperation extends StorageOperation<StorageBlob> {
      * @throws ReadConsistencyException
      */
     private StorageBlob GetValue(ExecutorCompletionService<StorageBlob> executionPool,
-                                 int minimumMatchReads) throws TimeoutException, ReadConsistencyException
-    {
+                                 int minimumMatchReads) throws TimeoutException, ReadConsistencyException, KeyNotFoundException {
         long tickCount = currentTimeMillis();
         long timeout = _ReadTimeout;
         StorageBlob result = null;
@@ -85,7 +81,10 @@ public class ReadOperation extends StorageOperation<StorageBlob> {
                         }
                     }
                     else {
-                        throw new ReadConsistencyException();
+                        if(resultCount > 0)
+                            throw new ReadConsistencyException();
+                        else
+                            throw new KeyNotFoundException();
                     }
                     long newTickCount = currentTimeMillis();
                     timeout = timeout - (newTickCount - tickCount);

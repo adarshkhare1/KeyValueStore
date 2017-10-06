@@ -1,6 +1,7 @@
 package com.adarsh.KeyValueStore.Cluster;
 
 import com.adarsh.KeyValueStore.Storage.*;
+import com.adarsh.KeyValueStore.Tasks.StorageResult;
 import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,6 +26,7 @@ public class StorageMasterNode extends PhysicalNode {
     private final StoragePartitionManager _partitionManager;
     private final WriteRequestRouter _writeRouter;
     private final ReadRequestRouter _readRouter;
+    private final DeleteRequestRouter _deleteRouter;
 
     /**
      * @param endpoint
@@ -44,6 +46,7 @@ public class StorageMasterNode extends PhysicalNode {
         _partitionManager = new StoragePartitionManager();
         _writeRouter = new WriteRequestRouter(_partitionManager);
         _readRouter = new ReadRequestRouter(_partitionManager);
+        _deleteRouter = new DeleteRequestRouter(_partitionManager);
     }
 
     /**
@@ -101,5 +104,14 @@ public class StorageMasterNode extends PhysicalNode {
     public StorageBlob getValue(long key) throws StorageException, TimeoutException
     {
         return _readRouter.getValue(key);
+    }
+
+    /**
+     * @param key
+     * @throws StorageException
+     */
+    public void delete(long key) throws StorageException, TimeoutException
+    {
+        _deleteRouter.delete(key);
     }
 }
