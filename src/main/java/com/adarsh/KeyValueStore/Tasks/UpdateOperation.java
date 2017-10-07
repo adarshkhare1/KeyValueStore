@@ -16,27 +16,26 @@ import java.util.concurrent.TimeoutException;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-public class InsertOperation extends StorageOperation<StorageResult> {
-
+public class UpdateOperation extends StorageOperation<StorageResult> {
     private static final Logger _LOGGER;
-    private static final int _WriteTimeout = 10000; //milliseconds
+    private static final int _UpdateTimeout = 10000; //milliseconds
 
     static
     {
-        _LOGGER = LogManager.getLogger(InsertOperation.class.getName());
+        _LOGGER = LogManager.getLogger(UpdateOperation.class.getName());
     }
 
-    private int _minimumSuccessfulWrites = 1;
+    private int _minimumSuccessfulUpdates = 1;
     private StorageBlob _value;
 
-    public int getMinimumSuccessfulWrites()
+    public int getMinimumSuccessfulUpdates()
     {
-        return _minimumSuccessfulWrites;
+        return _minimumSuccessfulUpdates;
     }
 
-    public void setMinimumSuccessfulWrites(int value)
+    public void setMinimumSuccessfulUpdates(int value)
     {
-        this._minimumSuccessfulWrites = value;
+        this._minimumSuccessfulUpdates = value;
     }
 
     public StorageBlob getValue() {
@@ -49,23 +48,24 @@ public class InsertOperation extends StorageOperation<StorageResult> {
 
     @Override
     public StorageAction getStorageAction() {
-        return StorageAction.Insert;
+        return StorageAction.Update;
     }
 
     @Override
-    public StorageResult execute() throws TimeoutException, StorageException {
+    public StorageResult execute() throws TimeoutException, StorageException
+    {
         ExecutorCompletionService<StorageResult> executionPool
                 = StorageTaskPool.CreateNewTaskCompletionService(this);
         List<Future<StorageResult>> futures = new ArrayList<>();
         for (StoragePartition p : super.getPartitions())
         {
-            InsertTask task = new InsertTask(p, super.getKey(), _value);
+            UpdateTask task = new UpdateTask(p, super.getKey(), _value);
             futures.add(executionPool.submit(task));
             _LOGGER.info("Submitted WriterTask to insert key {} to partition {}.", super.getKey(), p);
         }
         super.waitForMinimumWrites(executionPool,
-                _minimumSuccessfulWrites,
-                _minimumSuccessfulWrites,
+                _minimumSuccessfulUpdates,
+                _UpdateTimeout,
                 _LOGGER);
         return StorageResult.Success;
     }

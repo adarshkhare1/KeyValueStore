@@ -5,6 +5,7 @@ import com.adarsh.KeyValueStore.Storage.StorageBlob;
 import com.adarsh.KeyValueStore.Storage.StorageException;
 import com.adarsh.KeyValueStore.Storage.StoragePartition;
 import com.adarsh.KeyValueStore.Tasks.InsertOperation;
+import com.adarsh.KeyValueStore.Tasks.UpdateOperation;
 import com.google.common.base.Preconditions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,6 +51,31 @@ public class WriteRequestRouter {
             operation.setKey(key);
             operation.setValue(data);
             operation.setMinimumSuccessfulWrites(_MinimumWriteReplication);
+            operation.execute();
+        }
+        else {
+            _LOGGER.info("No valid partition found for inserting key {}.", key);
+            throw new KeyOutOfRangeException();
+        }
+    }
+
+    /**
+     * @param key
+     * @param data
+     * @throws KeyOutOfRangeException
+     * @throws TimeoutException
+     */
+    public void update(long key,
+                       StorageBlob data)
+            throws StorageException, TimeoutException
+    {
+        StoragePartition[] partitionsToUpdate = _partitionManager.getWritePartitions(key);
+        if(partitionsToUpdate != null) {
+            UpdateOperation operation = new UpdateOperation();
+            operation.setPartitions(partitionsToUpdate);
+            operation.setKey(key);
+            operation.setValue(data);
+            operation.setMinimumSuccessfulUpdates(_MinimumWriteReplication);
             operation.execute();
         }
         else {

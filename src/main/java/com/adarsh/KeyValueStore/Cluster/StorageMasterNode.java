@@ -99,6 +99,16 @@ public class StorageMasterNode extends PhysicalNode {
 
     /**
      * @param key
+     * @param data
+     * @throws StorageException
+     */
+    public void update(long key, StorageBlob data) throws StorageException, TimeoutException
+    {
+        _writeRouter.update(key, data);
+    }
+
+    /**
+     * @param key
      * @throws StorageException
      */
     public StorageBlob getValue(long key) throws StorageException, TimeoutException
