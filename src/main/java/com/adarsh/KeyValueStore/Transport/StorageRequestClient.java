@@ -3,17 +3,21 @@ package com.adarsh.KeyValueStore.Transport;
 import java.io.*;
 import java.net.Socket;
 
-public class StorageRequestStream {
+public class StorageRequestClient {
     private final InputStream inStream;
     private final OutputStream outStream;
 
-    public StorageRequestStream(Socket clientSocket){
+    public StorageRequestClient(Socket clientSocket){
         try {
             inStream = clientSocket.getInputStream();
             outStream = clientSocket.getOutputStream();
         } catch (IOException e) {
            throw new IllegalArgumentException(e);
         }
+    }
+
+    public void start(){
+
     }
 
     public KeyValueStoreRequest getNextRequest(){
