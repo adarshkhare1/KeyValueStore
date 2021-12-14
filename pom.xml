@@ -8,7 +8,7 @@
     <artifactId>KeyValueStore</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
-            <slf4j.version>2.15.0</slf4j.version>
+            <slf4j.version>2.16.0</slf4j.version>
     </properties>
     <build>
         <plugins>
